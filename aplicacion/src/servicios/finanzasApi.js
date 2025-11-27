@@ -2,82 +2,88 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api';
 
-// Obtener token del localStorage
-const getToken = () => localStorage.getItem('token');
-
-const config = () => ({
+// Helper para obtener headers con token
+const getAuthHeaders = () => ({
   headers: {
-    Authorization: `Bearer ${getToken()}`
+    Authorization: `Bearer ${localStorage.getItem('token')}`
   }
 });
 
 // ========== TRANSACCIONES ==========
 export const obtenerTransacciones = async (filtros = {}) => {
-  const params = new URLSearchParams(filtros).toString();
-  const { data } = await axios.get(`${API_URL}/transacciones?${params}`, config());
-  return data;
+  const params = new URLSearchParams(filtros);
+  const response = await axios.get(`${API_URL}/transacciones?${params.toString()}`, getAuthHeaders());
+  return response;
 };
 
-export const crearTransaccion = async (transaccion) => {
-  const { data } = await axios.post(`${API_URL}/transacciones`, transaccion, config());
-  return data;
+export const crearTransaccion = async (datos) => {
+  const response = await axios.post(`${API_URL}/transacciones`, datos, getAuthHeaders());
+  return response;
 };
 
 export const eliminarTransaccion = async (id) => {
-  const { data } = await axios.delete(`${API_URL}/transacciones/${id}`, config());
-  return data;
+  const response = await axios.delete(`${API_URL}/transacciones/${id}`, getAuthHeaders());
+  return response;
 };
 
 export const obtenerEstadisticas = async (mes, anio) => {
-  const params = mes && anio ? `?mes=${mes}&anio=${anio}` : '';
-  const { data } = await axios.get(`${API_URL}/transacciones/estadisticas${params}`, config());
-  return data;
+  const params = new URLSearchParams();
+  if (mes) params.append('mes', mes);
+  if (anio) params.append('anio', anio);
+  
+  const response = await axios.get(`${API_URL}/transacciones/estadisticas?${params.toString()}`, getAuthHeaders());
+  return response;
 };
 
-// ========== METAS ==========
+// ========== METAS DE AHORRO ==========
 export const obtenerMetas = async (estado = null) => {
   const params = estado ? `?estado=${estado}` : '';
-  const { data } = await axios.get(`${API_URL}/metas${params}`, config());
-  return data;
+  const response = await axios.get(`${API_URL}/metas${params}`, getAuthHeaders());
+  return response;
 };
 
-export const crearMeta = async (meta) => {
-  const { data } = await axios.post(`${API_URL}/metas`, meta, config());
-  return data;
+export const crearMeta = async (datos) => {
+  const response = await axios.post(`${API_URL}/metas`, datos, getAuthHeaders());
+  return response;
+};
+
+export const actualizarMeta = async (id, datos) => {
+  const response = await axios.put(`${API_URL}/metas/${id}`, datos, getAuthHeaders());
+  return response;
 };
 
 export const agregarFondosMeta = async (id, monto) => {
-  const { data } = await axios.put(`${API_URL}/metas/${id}/agregar-fondos`, { monto }, config());
-  return data;
-};
-
-export const actualizarMeta = async (id, meta) => {
-  const { data } = await axios.put(`${API_URL}/metas/${id}`, meta, config());
-  return data;
+  const response = await axios.post(`${API_URL}/metas/${id}/agregar-fondos`, { monto }, getAuthHeaders());
+  return response;
 };
 
 export const eliminarMeta = async (id) => {
-  const { data } = await axios.delete(`${API_URL}/metas/${id}`, config());
-  return data;
+  const response = await axios.delete(`${API_URL}/metas/${id}`, getAuthHeaders());
+  return response;
 };
 
-// ========== PRESUPUESTOS ==========
+// ========== PRESUPUESTO ==========
+export const obtenerPresupuestos = async () => {
+  const response = await axios.get(`${API_URL}/presupuestos`, getAuthHeaders());
+  return response;
+};
+
 export const obtenerPresupuestoActual = async () => {
-  const { data } = await axios.get(`${API_URL}/presupuestos/actual`, config());
-  return data;
+  const response = await axios.get(`${API_URL}/presupuestos/actual`, getAuthHeaders());
+  return response;
 };
 
-export const crearPresupuesto = async (presupuesto) => {
-  const { data } = await axios.post(`${API_URL}/presupuestos`, presupuesto, config());
-  return data;
+export const crearPresupuesto = async (datos) => {
+  const response = await axios.post(`${API_URL}/presupuestos`, datos, getAuthHeaders());
+  return response;
 };
 
-export const sincronizarPresupuesto = async (id) => {
-  const { data } = await axios.put(`${API_URL}/presupuestos/${id}/sincronizar`, {}, config());
-  return data;
+export const actualizarPresupuesto = async (id, datos) => {
+  const response = await axios.put(`${API_URL}/presupuestos/${id}`, datos, getAuthHeaders());
+  return response;
 };
 
-export const obtenerHistorialPresupuestos = async () => {
-  const { data } = await axios.get(`${API_URL}/presupuestos/historial`, config());
-  return data;
+export const eliminarPresupuesto = async (id) => {
+  const response = await axios.delete(`${API_URL}/presupuestos/${id}`, getAuthHeaders());
+  return response;
 };

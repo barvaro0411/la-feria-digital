@@ -16,6 +16,8 @@ import NuevaTransaccion from './paginas/NuevaTransaccion';
 import Transacciones from './paginas/Transacciones';
 import Metas from './paginas/Metas';
 import NuevaMeta from './paginas/NuevaMeta';
+import Presupuesto from './paginas/Presupuesto';
+import ChatNubi from './paginas/ChatNubi';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
         <Route path="/transacciones/nueva" element={<RutaProtegida><NuevaTransaccion /></RutaProtegida>} />
         <Route path="/metas" element={<RutaProtegida><Metas /></RutaProtegida>} />
         <Route path="/metas/nueva" element={<RutaProtegida><NuevaMeta /></RutaProtegida>} />
+        <Route path="/presupuesto" element={<RutaProtegida><Presupuesto /></RutaProtegida>} />
+        <Route path="/chat-nubi" element={<RutaProtegida><ChatNubi /></RutaProtegida>} />
 
         {/* Redirecciones */}
         <Route path="/" element={<Navigate to="/inicio" replace />} />
