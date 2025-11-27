@@ -4,8 +4,6 @@ import Login from './componentes/Login';
 import Registro from './componentes/Registro';
 import RutaProtegida from './componentes/RutaProtegida';
 
-
-
 // Páginas
 import Inicio from './paginas/Inicio';
 import Dashboard from './paginas/Dashboard';
@@ -21,7 +19,13 @@ import ChatNubi from './paginas/ChatNubi';
 
 function App() {
   return (
-    <BrowserRouter>
+    // ✅ CORRECCIÓN: Banderas para silenciar advertencias de v7
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Navbar />
       <Routes>
         {/* Rutas públicas */}

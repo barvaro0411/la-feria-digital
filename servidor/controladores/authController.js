@@ -1,26 +1,26 @@
 const Usuario = require('../modelos/Usuario');
 const jwt = require('jsonwebtoken');
-
-// Generar JWT
-const generarToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
-  });
-};
+const bcrypt = require('bcryptjs');
 
 // @desc    Registrar nuevo usuario
-// @route   POST /api/auth/register
-// @access  Público
-exports.register = async (req, res) => {
+exports.registro = async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
+
+    // Validar datos
+    if (!nombre || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Por favor completa todos los campos'
+      });
+    }
 
     // Verificar si el usuario ya existe
     const usuarioExiste = await Usuario.findOne({ email });
     if (usuarioExiste) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        msg: 'El email ya está registrado' 
+        mensaje: 'El email ya está registrado'
       });
     }
 
@@ -32,7 +32,11 @@ exports.register = async (req, res) => {
     });
 
     // Generar token
-    const token = generarToken(usuario._id);
+    const token = jwt.sign(
+      { id: usuario._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
 
     res.status(201).json({
       success: true,
@@ -41,45 +45,55 @@ exports.register = async (req, res) => {
         id: usuario._id,
         nombre: usuario.nombre,
         email: usuario.email
-      },
-      msg: '✅ Usuario registrado exitosamente'
+      }
     });
   } catch (error) {
     console.error('Error en registro:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      msg: error.message 
+      mensaje: 'Error al registrar usuario',
+      error: error.message
     });
   }
 };
 
 // @desc    Login de usuario
-// @route   POST /api/auth/login
-// @access  Público
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findOne({ email });
-    if (!usuario) {
-      return res.status(401).json({ 
+    // Validar datos
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
-        msg: 'Credenciales inválidas' 
+        mensaje: 'Por favor ingresa email y contraseña'
       });
     }
 
-    // Verificar password
+    // Buscar usuario
+    const usuario = await Usuario.findOne({ email }).select('+password');
+    if (!usuario) {
+      return res.status(401).json({
+        success: false,
+        mensaje: 'Credenciales incorrectas'
+      });
+    }
+
+    // Verificar contraseña
     const passwordCorrecto = await usuario.compararPassword(password);
     if (!passwordCorrecto) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        msg: 'Credenciales inválidas' 
+        mensaje: 'Credenciales incorrectas'
       });
     }
 
     // Generar token
-    const token = generarToken(usuario._id);
+    const token = jwt.sign(
+      { id: usuario._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
 
     res.json({
       success: true,
@@ -87,39 +101,32 @@ exports.login = async (req, res) => {
       usuario: {
         id: usuario._id,
         nombre: usuario.nombre,
-        email: usuario.email,
-        nivel: usuario.nivel,
-        ahorroTotal: usuario.ahorroTotal
-      },
-      msg: '✅ Login exitoso'
+        email: usuario.email
+      }
     });
   } catch (error) {
     console.error('Error en login:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      msg: error.message 
+      mensaje: 'Error al iniciar sesión',
+      error: error.message
     });
   }
 };
 
-// @desc    Obtener perfil del usuario autenticado
-// @route   GET /api/auth/me
-// @access  Privado
+// @desc    Obtener perfil de usuario
 exports.obtenerPerfil = async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.usuario.id)
-      .select('-password')
-      .populate('metasActivas')
-      .populate('presupuestoActual');
-
+    const usuario = await Usuario.findById(req.usuario._id);
     res.json({
       success: true,
       data: usuario
     });
   } catch (error) {
-    res.status(500).json({ 
+    console.error('Error obteniendo perfil:', error);
+    res.status(500).json({
       success: false,
-      msg: error.message 
+      mensaje: 'Error al obtener perfil'
     });
   }
 };

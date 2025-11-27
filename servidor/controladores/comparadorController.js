@@ -1,4 +1,4 @@
-// CÓDIGO para el NUEVO ARCHIVO: servidor/controladores/comparadorController.js
+// CÓDIGO para: servidor/controladores/comparadorController.js
 
 const Codigo = require('../modelos/Codigo'); 
 
@@ -11,7 +11,7 @@ const aplicarMejorCupon = (precio, codigosDisponibles) => {
         return { precioFinal: precio, codigoAplicado: null };
     }
 
-    // Lógica simplificada: Encuentra el código con el mayor porcentaje (asume el formato "X% en...")
+    // Lógica simplificada: Encuentra el código con el mayor porcentaje
     for (const codigo of codigosDisponibles) {
         const match = codigo.descuento.match(/(\d+)%/);
         if (match) {
@@ -50,23 +50,28 @@ exports.buscarPrecios = async (req, res) => {
         return res.status(400).json({ msg: 'Debe especificar un producto para comparar.' });
     }
 
-    // 1. Simulación de Scraper/Base de Datos de Precios
+    // 1. Simulación de Scraper (DATOS ESTÁTICOS DE EJEMPLO, NO RANDOM)
+    // Esto genera confianza al mostrar precios consistentes durante la demo.
+    
+    // Precio base simulado según la longitud del nombre del producto (para variar sin ser random)
+    const precioBase = producto.length * 10000 + 50000; 
+
     const resultadosBrutos = [
         {
             tienda: 'falabella',
-            precio: Math.floor(Math.random() * 200000) + 50000,
+            precio: precioBase, 
             link: `https://www.falabella.cl/search?q=${producto}`,
             categoria: categoria || 'tecnologia'
         },
         {
             tienda: 'ripley',
-            precio: Math.floor(Math.random() * 200000) + 60000,
+            precio: precioBase + 15000, // Siempre un poco más caro en este ejemplo
             link: `https://www.ripley.cl/search?q=${producto}`,
             categoria: categoria || 'tecnologia'
         },
         {
             tienda: 'paris',
-            precio: Math.floor(Math.random() * 200000) + 70000,
+            precio: precioBase - 5000, // Siempre un poco más barato
             link: `https://www.paris.cl/search?q=${producto}`,
             categoria: categoria || 'tecnologia'
         }
@@ -76,7 +81,7 @@ exports.buscarPrecios = async (req, res) => {
     const resultadosFinales = [];
 
     for (const resultado of resultadosBrutos) {
-        // Buscar el mejor cupón disponible para esta tienda y categoría
+        // Buscar el mejor cupón disponible en BD para esta tienda y categoría
         const codigosDisponibles = await Codigo.find({ 
             tienda: resultado.tienda, 
             categoria: resultado.categoria,
@@ -93,7 +98,7 @@ exports.buscarPrecios = async (req, res) => {
         });
     }
 
-    // 3. Ordenar por precio final ascendente
+    // 3. Ordenar por precio final ascendente (el más barato primero)
     resultadosFinales.sort((a, b) => a.precioFinal - b.precioFinal);
 
     res.json({ producto, resultados: resultadosFinales });

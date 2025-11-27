@@ -21,7 +21,7 @@ class NubiIA {
     return this.usarIASimulada(pregunta, contextoUsuario);
   }
   
-  // Usar OpenAI GPT-4
+  // Usar OpenAI GPT-4 (o 3.5)
   async usarOpenAI(pregunta, contexto) {
     try {
       const prompt = this.construirPrompt(pregunta, contexto);
@@ -81,106 +81,71 @@ class NubiIA {
     return prompt;
   }
   
-  // IA Simulada inteligente (analiza datos reales)
+  // IA Simulada MEJORADA (analiza datos reales con Regex)
   usarIASimulada(pregunta, contexto) {
-    const preguntaLower = pregunta.toLowerCase();
+    const p = pregunta.toLowerCase(); // Normalizar texto
     const { transacciones, metas, presupuesto, estadisticas } = contexto;
     
-    // Análisis de gastos
-    if (preguntaLower.includes('gasto') || preguntaLower.includes('gasté') || preguntaLower.includes('cuánto')) {
+    // 1. Intención: GASTOS (Detecta: gasté, gasto, compras, salidas, debitado)
+    if (/gast(o|é)|compr(a|e)|salida|debitado|cu[aá]nto me queda/.test(p)) {
       const totalGastos = estadisticas?.totalGastos || 0;
       const balance = estadisticas?.balance || 0;
       
       if (balance < 0) {
-        return `Este mes has gastado $${totalGastos.toLocaleString()} y tus gastos superan tus ingresos por $${Math.abs(balance).toLocaleString()} 😟\n\n` +
-               `Te recomiendo:\n` +
-               `1. Revisa las categorías donde más gastas 📊\n` +
-               `2. Usa más cupones de descuento 🎟️\n` +
-               `3. Ajusta tu presupuesto para el próximo mes 💡`;
+        return `⚠️ Ojo con tus finanzas. Este mes llevas gastados $${totalGastos.toLocaleString()} y estás en números rojos por $${Math.abs(balance).toLocaleString()}.\n\n` +
+               `¡Frena un poco! Revisa tus categorías más altas en el dashboard. 📊`;
       } else {
-        return `¡Bien hecho! 👏 Este mes has gastado $${totalGastos.toLocaleString()} y tienes un balance positivo de $${balance.toLocaleString()}\n\n` +
-               `Considera destinar parte de ese balance a tus metas de ahorro 🎯`;
+        return `📊 Resumen de gastos: Llevas $${totalGastos.toLocaleString()} este mes.\n` +
+               `Aún tienes un saldo a favor de $${balance.toLocaleString()}. ¡Vas bien! ✅`;
       }
     }
     
-    // Análisis de ahorro
-    if (preguntaLower.includes('ahorro') || preguntaLower.includes('ahorrar')) {
+    // 2. Intención: AHORRO (Detecta: ahorr(ar/o), guardar, reserva)
+    if (/ahorr(o|ar)|guardar|reserva/.test(p)) {
       const totalAhorro = estadisticas?.totalAhorro || 0;
+      const metasActivas = metas?.length || 0;
       
-      if (totalAhorro > 0) {
-        return `¡Excelente! 🎉 Has ahorrado $${totalAhorro.toLocaleString()} usando cupones este mes.\n\n` +
-               `Para seguir ahorrando:\n` +
-               `• Revisa diariamente los cupones disponibles\n` +
-               `• Compara precios antes de comprar\n` +
-               `• Establece metas de ahorro claras`;
-      } else {
-        return `Aún no has usado cupones este mes 🎟️\n\n` +
-               `Tengo ${contexto.cuponesDisponibles || 10} cupones disponibles para ti. ¡Úsalos para ahorrar en tus próximas compras!`;
-      }
+      return `💰 Has ahorrado un total de $${totalAhorro.toLocaleString()} gracias a cupones.\n` +
+             `Actualmente tienes ${metasActivas} metas de ahorro activas. ¿Quieres crear una nueva? 🎯`;
     }
     
-    // Análisis de metas
-    if (preguntaLower.includes('meta')) {
+    // 3. Intención: METAS (Detecta: meta, objetivo, sueño)
+    if (/meta|objetivo|sueño/.test(p)) {
       if (!metas || metas.length === 0) {
-        return `No tienes metas de ahorro activas 🎯\n\n` +
-               `Te recomiendo crear al menos una meta. Las personas con metas claras ahorran 40% más que quienes no las tienen.\n\n` +
-               `¿Qué te gustaría lograr? 💭`;
+        return `Aún no tienes metas definidas. 🏁\n` +
+               `Establecer un objetivo (como "Viaje" o "Notebook") te ayuda a enfocarte. ¡Crea una ahora!`;
       }
-      
-      const metasTexto = metas.map(m => 
-        `• ${m.icono} ${m.nombre}: ${m.progreso}% ($${m.montoActual?.toLocaleString()}/$${m.montoObjetivo?.toLocaleString()})`
-      ).join('\n');
-      
-      return `Tienes ${metas.length} meta${metas.length > 1 ? 's' : ''} activa${metas.length > 1 ? 's' : ''} 🎯\n\n${metasTexto}\n\n` +
-             `${metas[0].progreso < 30 ? '¡Sigue así! Cada pequeño aporte cuenta 💪' : '¡Vas muy bien! 🚀'}`;
+      // Muestra la meta más cercana a completarse
+      const metaTop = metas.sort((a, b) => b.progreso - a.progreso)[0];
+      return `Tu meta más avanzada es "${metaTop.nombre}" con un ${metaTop.progreso}% completado. 🚀\n` +
+             `¡Te falta poco! Sigue así.`;
     }
-    
-    // Análisis de presupuesto
-    if (preguntaLower.includes('presupuesto')) {
-      if (!presupuesto) {
+
+    // 4. Intención: PRESUPUESTO (Detecta: presupuesto, limite, tope)
+    if (/presupuesto|limite|tope/.test(p)) {
+       if (!presupuesto) {
         return `No tienes un presupuesto configurado 📊\n\n` +
                `Crear un presupuesto te ayudará a controlar tus gastos y evitar sorpresas. ¿Quieres que te ayude a crear uno?`;
       }
-      
       const porcentaje = parseFloat(presupuesto.porcentajeUsado);
-      
       if (porcentaje > 90) {
-        return `⚠️ ¡Alerta! Has usado el ${porcentaje}% de tu presupuesto mensual.\n\n` +
-               `Te quedan $${(presupuesto.totalPresupuesto - presupuesto.totalGastado).toLocaleString()} para el resto del mes.\n\n` +
-               `Prioriza solo gastos esenciales los próximos días 🛡️`;
-      } else if (porcentaje > 75) {
-        return `Has usado el ${porcentaje}% de tu presupuesto 📊\n\n` +
-               `Te estás acercando al límite. Te recomiendo moderar tus gastos el resto del mes 💡`;
-      } else {
-        return `¡Vas bien! 👍 Has usado el ${porcentaje}% de tu presupuesto mensual.\n\n` +
-               `Sigues dentro del rango saludable. Mantén el control 💪`;
+        return `⚠️ ¡Alerta! Has usado el ${porcentaje}% de tu presupuesto mensual. Prioriza gastos esenciales.`;
       }
+      return `👍 Has usado el ${porcentaje}% de tu presupuesto mensual. Sigues dentro del rango saludable.`;
+    }
+
+    // 5. Intención: SALUDO (Detecta: hola, buenos dias, hey)
+    if (/hola|buen(a|o)s|hey|qué tal/.test(p)) {
+      return `¡Hola! 👋 Soy Nubi. Estoy aquí para cuidar tu bolsillo.\n` +
+             `Pregúntame sobre tus gastos, metas o pídeme un consejo financiero.`;
     }
     
-    // Consejos generales
-    if (preguntaLower.includes('consejo') || preguntaLower.includes('ayuda')) {
-      const consejos = [
-        `💡 Consejo del día:\n\nAntes de comprar algo, espera 24 horas. Si aún lo quieres después, probablemente lo necesites. Si no, acabas de ahorrar dinero.`,
-        
-        `💡 Consejo del día:\n\nLa regla 50/30/20:\n• 50% necesidades\n• 30% gustos\n• 20% ahorro\n\n¿Qué tal si revisamos cómo está tu distribución actual?`,
-        
-        `💡 Consejo del día:\n\nAutomatiza tu ahorro. Separa un porcentaje de tus ingresos apenas los recibas. Lo que no ves, no lo gastas 🎯`,
-        
-        `💡 Consejo del día:\n\nCompara precios antes de comprar. Usa cupones siempre que puedas. Pequeños ahorros suman grandes resultados 📈`
-      ];
-      
-      return consejos[Math.floor(Math.random() * consejos.length)];
-    }
-    
-    // Respuesta por defecto
-    return `Interesante pregunta 🤔\n\n` +
-           `Puedo ayudarte con:\n` +
-           `💰 Ver tus gastos del mes\n` +
-           `🎯 Revisar tus metas de ahorro\n` +
-           `🎟️ Encontrar cupones\n` +
-           `📊 Analizar tu presupuesto\n` +
-           `💡 Darte consejos financieros\n\n` +
-           `¿Sobre qué tema específico te gustaría hablar?`;
+    // Respuesta por defecto (Fallback con sugerencias claras)
+    return `Mmm, no estoy seguro de entender eso 🤔.\n\n` +
+           `Intenta preguntarme cosas como:\n` +
+           `• "¿Cuánto he gastado este mes?"\n` +
+           `• "¿Cómo van mis metas?"\n` +
+           `• "Dame un consejo de ahorro"`;
   }
   
   // Análisis proactivo (para notificaciones)

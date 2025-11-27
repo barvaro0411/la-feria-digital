@@ -1,120 +1,135 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { registrarUsuario } from '../servicios/api';
-import { Link, useNavigate } from 'react-router-dom';
 
-const Registro = () => {
-  const [form, setForm] = useState({ nombre: '', correo: '', password: '' });
-  const [mensaje, setMensaje] = useState('');
+export default function Registro() {
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await registrarUsuario(form);
-      setMensaje(res.data.msg + ". Ahora serás redirigido para iniciar sesión."); 
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+    setError('');
+    setCargando(true);
 
+    try {
+      const res = await registrarUsuario(formData);
+      
+      if (res.data.success) {
+        localStorage.setItem('token', res.data.token);
+        navigate('/inicio');
+      }
     } catch (error) {
-      setMensaje(error.response?.data?.msg || 'Error al registrar');
+      console.error('Error:', error);
+      setError(error.response?.data?.mensaje || 'Error al registrarse. Intenta de nuevo.');
+    } finally {
+      setCargando(false);
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Crear Cuenta
-        </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label 
-              htmlFor="nombre" 
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Nombre
-            </label>
-            <input 
-              type="text" 
-              name="nombre" 
-              id="nombre"
-              placeholder="Tu Nombre" 
-              value={form.nombre} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center px-4">
+      <div className="max-w-md w-full">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4 shadow-lg">
+            <span className="text-4xl">☁️</span>
           </div>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            <span className="text-white">Nubi</span>
+            <span className="text-blue-400">AI</span>
+          </h1>
+          <p className="text-gray-300">Crea tu cuenta y comienza a ahorrar</p>
+        </div>
 
-          <div>
-            <label 
-              htmlFor="correo" 
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Correo Electrónico
-            </label>
-            <input 
-              type="email" 
-              name="correo" 
-              id="correo"
-              placeholder="tu@correo.com" 
-              value={form.correo} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+        {/* Formulario */}
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-gray-700">
+          <h2 className="text-2xl font-bold text-white mb-6 text-center">Registro</h2>
           
-          <div>
-            <label 
-              htmlFor="password" 
-              className="block text-sm font-medium text-gray-700 mb-1"
+          {error && (
+            <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-gray-300 text-sm font-semibold mb-2">
+                Nombre Completo
+              </label>
+              <input
+                type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-white/5 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Juan Pérez"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 text-sm font-semibold mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-white/5 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="tu@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 text-sm font-semibold mb-2">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+                className="w-full px-4 py-3 bg-white/5 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={cargando}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-600 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Contraseña
-            </label>
-            <input 
-              type="password" 
-              name="password" 
-              id="password"
-              placeholder="••••••••" 
-              value={form.password} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+              {cargando ? 'Registrando...' : 'Crear Cuenta'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-300">
+              ¿Ya tienes cuenta?{' '}
+              <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
+                Inicia Sesión
+              </Link>
+            </p>
           </div>
-          
-          <button 
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            Registrar
-          </button>
-        </form>
-
-        {mensaje && (
-          <p className={`mt-4 text-center p-2 rounded-md ${mensaje.includes('Error') ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'}`}>
-            {mensaje}
-          </p>
-        )}
-
-        <p className="mt-6 text-center text-sm text-gray-600">
-          ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Inicia sesión
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Registro;
+}

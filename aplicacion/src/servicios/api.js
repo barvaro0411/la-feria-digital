@@ -32,7 +32,8 @@ export const votarCodigo = async (id, voto) => {
 
 // ========== AUTENTICACIÓN ==========
 export const registrarUsuario = async (datos) => {
-  const response = await axios.post(`${API_URL}/auth/registro`, datos);
+  // ✅ CORRECCIÓN: Cambiamos 'registro' por 'register' para coincidir con el servidor
+  const response = await axios.post(`${API_URL}/auth/register`, datos);
   return response;
 };
 
