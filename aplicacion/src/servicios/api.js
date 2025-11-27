@@ -1,62 +1,69 @@
-// CÓDIGO FINAL para: aplicacion/src/servicios/api.js
-
 import axios from 'axios';
 
-const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+const API_URL = 'http://localhost:3000/api';
+
+// Helper para obtener headers con token
+const getAuthHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
 });
 
-// Interceptor para añadir el token JWT a las peticiones protegidas
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-export const registrarUsuario = (datos) => {
-  return apiClient.post('/auth/registro', datos);
+// ========== CÓDIGOS ==========
+export const obtenerCodigos = async () => {
+  const response = await axios.get(`${API_URL}/codigos`, getAuthHeaders());
+  return response;
 };
 
-export const loginUsuario = (datos) => {
-  return apiClient.post('/auth/login', datos);
+export const crearCodigo = async (codigo) => {
+  const response = await axios.post(`${API_URL}/codigos`, codigo, getAuthHeaders());
+  return response;
 };
 
-// Permite pasar un objeto de configuración que puede incluir `params` para filtros
-export const obtenerCodigos = (config = {}) => {
-  return apiClient.get('/codigos', config);
+export const verificarCodigo = async (id) => {
+  const response = await axios.post(`${API_URL}/codigos/${id}/verificar`, {}, getAuthHeaders());
+  return response;
 };
 
-export const crearCodigo = (datos) => {
-  return apiClient.post('/codigos', datos); 
+export const votarCodigo = async (id, voto) => {
+  const response = await axios.post(`${API_URL}/codigos/${id}/votar`, { voto }, getAuthHeaders());
+  return response;
 };
 
-export const votarCodigo = (id, voto) => {
-    return apiClient.put(`/codigos/${id}/votar`, { voto });
+// ========== AUTENTICACIÓN ==========
+export const registrarUsuario = async (datos) => {
+  const response = await axios.post(`${API_URL}/auth/registro`, datos);
+  return response;
 };
 
-export const verificarCodigo = (id) => {
-    return apiClient.put(`/codigos/${id}/verificar`);
-};
-// NUEVA FUNCIÓN: Obtener ubicaciones de tiendas físicas
-export const obtenerTiendasFisicas = () => {
-    return apiClient.get('/tiendas-fisicas'); // Llama a GET /api/tiendas-fisicas
-};
-// NUEVA FUNCIÓN: Búsqueda de precios para el comparador
-export const buscarPrecios = (config = {}) => {
-    // Usa 'config' para pasar los parámetros del producto
-    return apiClient.get('/comparador/buscar', config);
-};
-export const obtenerSuscripciones = () => {
-    return apiClient.get('/alertas');
+export const loginUsuario = async (datos) => {
+  const response = await axios.post(`${API_URL}/auth/login`, datos);
+  return response;
 };
 
-export const toggleSuscripcion = (categoria) => {
-    return apiClient.post('/alertas/toggle', { categoria });
+// ========== COMPARADOR ==========
+export const buscarEnComparador = async (producto, categoria = '') => {
+  const params = new URLSearchParams();
+  if (producto) params.append('producto', producto);
+  if (categoria) params.append('categoria', categoria);
+  
+  const response = await axios.get(`${API_URL}/comparador?${params.toString()}`, getAuthHeaders());
+  return response;
+};
+
+// ========== SUSCRIPCIONES/ALERTAS ==========
+export const obtenerSuscripciones = async () => {
+  const response = await axios.get(`${API_URL}/alertas`, getAuthHeaders());
+  return response;
+};
+
+export const toggleSuscripcion = async (categoria) => {
+  const response = await axios.post(`${API_URL}/alertas/toggle`, { categoria }, getAuthHeaders());
+  return response;
+};
+
+// ========== TIENDAS FÍSICAS ==========
+export const obtenerTiendasFisicas = async () => {
+  const response = await axios.get(`${API_URL}/tiendas-fisicas`, getAuthHeaders());
+  return response;
 };

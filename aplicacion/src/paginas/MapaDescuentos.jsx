@@ -1,106 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet'; // Necesario para el parche de íconos
-import Navbar from '../componentes/Navbar';
+import L from 'leaflet';
 import { obtenerTiendasFisicas } from '../servicios/api';
 
-// ===============================================
-// === PARCHE CRÍTICO DE LEAFLET PARA ÍCONOS ===
-// Fuerza a Leaflet a usar íconos de una CDN en lugar de buscar rutas locales fallidas.
-// ===============================================
+// Parche crítico de Leaflet para íconos
 delete L.Icon.Default.prototype._getIconUrl;
-
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-// ===============================================
-
 
 function MapaDescuentos() {
-    const [tiendas, setTiendas] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isClient, setIsClient] = useState(false); // Estado para forzar renderizado en cliente
+  const [tiendas, setTiendas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
-    // Coordenadas de Santiago de Chile
-    const centroChile = [-33.447487, -70.673676]; 
+  const centroChile = [-33.447487, -70.673676];
 
-    useEffect(() => {
-        // 1. Marca que el componente está montado para evitar el error de contexto
-        setIsClient(true); 
+  useEffect(() => {
+    setIsClient(true);
 
-        const cargarTiendas = async () => {
-            try {
-                const res = await obtenerTiendasFisicas();
-                setTiendas(res.data);
-            } catch (err) {
-                setError('Error al cargar las ubicaciones de tiendas.');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        cargarTiendas();
-    }, []);
-
-    const renderMapa = () => {
-        if (loading) return <p className="text-center py-10">Cargando mapa y ubicaciones...</p>;
-        if (error) return <p className="text-center py-10 text-red-500">{error}</p>;
-        
-        // 2. Si no estamos en el cliente O no hay datos, mostramos mensaje
-        if (!isClient || tiendas.length === 0) {
-            return <p className="text-center py-10">Inicializando mapa o no hay tiendas físicas con códigos para mostrar.</p>;
-        }
-
-        return (
-            <div style={{ height: '70vh', width: '100%' }}> 
-                {/* 3. MapContainer solo se renderiza si isClient es true */}
-                <MapContainer 
-                    center={centroChile} 
-                    zoom={12} 
-                    scrollWheelZoom={true} 
-                    style={{ height: '100%', width: '100%' }}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-
-                    {tiendas.map((tienda) => {
-                        const [lng, lat] = tienda.ubicacion.coordinates;
-                        
-                        return (
-                            <Marker position={[lat, lng]} key={tienda._id}>
-                                <Popup>
-                                    <h3 className="font-bold">{tienda.nombre}</h3>
-                                    <p>{tienda.direccion}</p>
-                                    <p className="text-sm text-gray-500">Tienda: {tienda.tienda.toUpperCase()}</p>
-                                </Popup>
-                            </Marker>
-                        );
-                    })}
-
-                </MapContainer>
-            </div>
+    const cargarTiendas = async () => {
+      try {
+        const res = await obtenerTiendasFisicas();
+        // ✅ FILTRAR solo tiendas con coordenadas válidas
+        const tiendasValidas = res.data.filter(
+          t => t.latitud != null && t.longitud != null
         );
+        setTiendas(tiendasValidas);
+      } catch (err) {
+        setError('Error al cargar las ubicaciones de tiendas.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    return (
-        <div className="min-h-screen bg-gray-100">
-            <Navbar />
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-6 px-4 sm:px-0">
-                    Mapa de Descuentos en Tiendas Físicas
-                </h1>
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    {renderMapa()}
-                </div>
-            </main>
+    cargarTiendas();
+  }, []);
+
+  const renderMapa = () => {
+    if (loading) return <div className="text-center py-8">Cargando mapa y ubicaciones...</div>;
+    if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+
+    if (!isClient) {
+      return <div className="text-center py-8">Inicializando mapa...</div>;
+    }
+
+    if (tiendas.length === 0) {
+      return (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-6 py-4 rounded-md">
+          ⚠️ No hay tiendas físicas con ubicación GPS registradas. 
+          <br />
+          <small>Ejecuta el script de Python para insertar datos de tiendas con coordenadas.</small>
         </div>
+      );
+    }
+
+    return (
+      <MapContainer center={centroChile} zoom={12} style={{ height: '500px', width: '100%' }} className="rounded-lg shadow-lg">
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {tiendas.map((tienda) => (
+          <Marker key={tienda._id} position={[tienda.latitud, tienda.longitud]}>
+            <Popup>
+              <strong>{tienda.direccion}</strong>
+              <br />
+              <span>Tienda: {tienda.tienda?.toUpperCase()}</span>
+              <br />
+              <span className="text-sm text-gray-600">{tienda.codigo || 'Sin código disponible'}</span>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     );
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">🗺️ Mapa de Descuentos en Tiendas Físicas</h1>
+      <p className="text-gray-600 mb-8">
+        Encuentra ofertas exclusivas disponibles en tiendas físicas cercanas.
+      </p>
+      {renderMapa()}
+    </div>
+  );
 }
 
 export default MapaDescuentos;

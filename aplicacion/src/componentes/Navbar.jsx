@@ -50,6 +50,14 @@ function Navbar() {
                         >
                             🔔 Alertas
                         </Link>
+
+                        {/* Enlace: Finanzas - ✅ ESTILO ACTUALIZADO */}
+                        <Link 
+                            to="/dashboard" 
+                            className="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                        >
+                            💰 Finanzas
+                        </Link>
                         
                         {/* Botón: Cerrar Sesión */}
                         <button

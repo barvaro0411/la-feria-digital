@@ -1,54 +1,125 @@
-// CÓDIGO FINAL LIMPIO para: servidor/controladores/authController.js
-
 const Usuario = require('../modelos/Usuario');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Registro de usuario
-exports.registrar = async (req, res) => {
+// Generar JWT
+const generarToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d'
+  });
+};
+
+// @desc    Registrar nuevo usuario
+// @route   POST /api/auth/register
+// @access  Público
+exports.register = async (req, res) => {
   try {
-    const { nombre, correo, password } = req.body;
-    let usuario = await Usuario.findOne({ correo });
-    if (usuario) return res.status(400).json({ msg: 'El correo ya está registrado' });
+    const { nombre, email, password } = req.body;
 
-    const salt = await bcrypt.genSalt(12);
-    const hash = await bcrypt.hash(password, salt);
+    // Verificar si el usuario ya existe
+    const usuarioExiste = await Usuario.findOne({ email });
+    if (usuarioExiste) {
+      return res.status(400).json({ 
+        success: false,
+        msg: 'El email ya está registrado' 
+      });
+    }
 
-    usuario = new Usuario({
+    // Crear usuario
+    const usuario = await Usuario.create({
       nombre,
-      correo,
-      password: hash
+      email,
+      password
     });
 
-    await usuario.save();
-    res.json({ msg: 'Usuario registrado correctamente' });
+    // Generar token
+    const token = generarToken(usuario._id);
+
+    res.status(201).json({
+      success: true,
+      token,
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email
+      },
+      msg: '✅ Usuario registrado exitosamente'
+    });
   } catch (error) {
-    res.status(500).json({ msg: 'Error en el registro', error: error.message });
+    console.error('Error en registro:', error);
+    res.status(500).json({ 
+      success: false,
+      msg: error.message 
+    });
   }
 };
 
-// Login de usuario
+// @desc    Login de usuario
+// @route   POST /api/auth/login
+// @access  Público
 exports.login = async (req, res) => {
   try {
-    const { correo, password } = req.body;
-    const usuario = await Usuario.findOne({ correo });
-    if (!usuario) return res.status(400).json({ msg: 'Usuario o contraseña incorrectos' });
+    const { email, password } = req.body;
 
-    const esMatch = await bcrypt.compare(password, usuario.password);
-    if (!esMatch) return res.status(400).json({ msg: 'Usuario o contraseña incorrectos' });
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      return res.status(401).json({ 
+        success: false,
+        msg: 'Credenciales inválidas' 
+      });
+    }
 
-    // Se eliminó el console.log de diagnóstico.
-    
-    const token = jwt.sign(
-      { id: usuario._id, nombre: usuario.nombre, correo: usuario.correo },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Verificar password
+    const passwordCorrecto = await usuario.compararPassword(password);
+    if (!passwordCorrecto) {
+      return res.status(401).json({ 
+        success: false,
+        msg: 'Credenciales inválidas' 
+      });
+    }
+
+    // Generar token
+    const token = generarToken(usuario._id);
+
     res.json({
+      success: true,
       token,
-      usuario: { nombre: usuario.nombre, correo: usuario.correo }
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        nivel: usuario.nivel,
+        ahorroTotal: usuario.ahorroTotal
+      },
+      msg: '✅ Login exitoso'
     });
   } catch (error) {
-    res.status(500).json({ msg: 'Error en el login', error: error.message });
+    console.error('Error en login:', error);
+    res.status(500).json({ 
+      success: false,
+      msg: error.message 
+    });
+  }
+};
+
+// @desc    Obtener perfil del usuario autenticado
+// @route   GET /api/auth/me
+// @access  Privado
+exports.obtenerPerfil = async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.usuario.id)
+      .select('-password')
+      .populate('metasActivas')
+      .populate('presupuestoActual');
+
+    res.json({
+      success: true,
+      data: usuario
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      msg: error.message 
+    });
   }
 };
