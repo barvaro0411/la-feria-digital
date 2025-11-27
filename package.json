@@ -1,0 +1,10 @@
+{
+  "name": "la-feria-digital",
+  "version": "1.0.0",
+  "description": "Plataforma de codigos de descuento",
+  "scripts": {
+    "servidor": "cd servidor && npm run dev",
+    "app": "cd aplicacion && npm run dev"
+  },
+  "license": "MIT"
+}

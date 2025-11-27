@@ -1,0 +1,18 @@
+[
+  {
+    "codigo": "BIENVENIDA10",
+    "tienda": "paris",
+    "categoria": "mujer",
+    "descuento": "10% en primera compra",
+    "descripcion": "Codigo de bienvenida",
+    "verificado": true
+  },
+  {
+    "codigo": "VERANO2025",
+    "tienda": "falabella",
+    "categoria": "hombre",
+    "descuento": "15% en ropa de verano",
+    "descripcion": "Promocion de temporada",
+    "verificado": true
+  }
+]

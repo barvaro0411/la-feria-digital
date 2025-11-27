@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+.env.local
+servidor/.env
+aplicacion/.env
+
+# Logs
+*.log
+logs/
+raspador/logs/*.log
+
+# Database
+*.db
+*.sqlite
+
+# Build
+dist/
+build/
+aplicacion/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+raspador/__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Scraped data
+raspador/data/
+*.json.tmp

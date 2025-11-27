@@ -1,0 +1,20 @@
+[
+    {
+        "nombre": "Paris Mall Plaza Vespucio",
+        "tienda": "paris",
+        "direccion": "Av. Vicuña Mackenna 7110, La Florida",
+        "ubicacion": {
+            "type": "Point",
+            "coordinates": [-70.5898, -33.5113] 
+        }
+    },
+    {
+        "nombre": "Falabella Costanera Center",
+        "tienda": "falabella",
+        "direccion": "Av. Andrés Bello 2447, Providencia",
+        "ubicacion": {
+            "type": "Point",
+            "coordinates": [-70.6053, -33.4217]
+        }
+    }
+]

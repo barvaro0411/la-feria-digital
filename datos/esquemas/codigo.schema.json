@@ -1,0 +1,21 @@
+{
+  "codigo": {
+    "type": "string",
+    "required": true
+  },
+  "tienda": {
+    "type": "string",
+    "required": true
+  },
+  "categoria": {
+    "type": "string",
+    "enum": ["mujer", "hombre", "hogar", "tecnologia", "deporte"]
+  },
+  "descuento": {
+    "type": "string",
+    "required": true
+  },
+  "fechaExpiracion": {
+    "type": "date"
+  }
+}
