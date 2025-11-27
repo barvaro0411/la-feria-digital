@@ -1,25 +1,25 @@
 const mongoose = require('mongoose');
 
-const MetaAhorroSchema = new mongoose.Schema({
+const metaAhorroSchema = new mongoose.Schema({
   usuario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Usuario',
-    required: true,
-    index: true
+    required: true
   },
   nombre: {
     type: String,
-    required: true,
-    maxlength: 100
+    required: [true, 'El nombre es obligatorio'],
+    trim: true,
+    maxlength: [100, 'El nombre no puede exceder 100 caracteres']
   },
   descripcion: {
     type: String,
-    maxlength: 300
+    maxlength: [500, 'La descripción no puede exceder 500 caracteres']
   },
   montoObjetivo: {
     type: Number,
-    required: true,
-    min: 1
+    required: [true, 'El monto objetivo es obligatorio'],
+    min: [1, 'El monto debe ser mayor a 0']
   },
   montoActual: {
     type: Number,
@@ -28,21 +28,22 @@ const MetaAhorroSchema = new mongoose.Schema({
   },
   categoria: {
     type: String,
-    enum: ['Viaje', 'Tecnología', 'Educación', 'Hogar', 'Emergencia', 'Inversión', 'Otro'],
-    default: 'Otro'
-  },
-  fechaInicio: {
-    type: Date,
-    default: Date.now
+    required: true,
+    enum: ['Ahorro', 'Vivienda', 'Vehículo', 'Viaje', 'Educación', 'Tecnología', 'Salud', 'Inversión', 'Emergencia', 'Entretenimiento', 'Otro'], // ✅ CORREGIDO
+    default: 'Ahorro'
   },
   fechaLimite: {
-    type: Date,
-    required: true
+    type: Date
   },
   estado: {
     type: String,
-    enum: ['activa', 'completada', 'cancelada'],
+    enum: ['activa', 'completada', 'pausada', 'cancelada'],
     default: 'activa'
+  },
+  prioridad: {
+    type: String,
+    enum: ['alta', 'media', 'baja'],
+    default: 'media'
   },
   icono: {
     type: String,
@@ -51,35 +52,56 @@ const MetaAhorroSchema = new mongoose.Schema({
   color: {
     type: String,
     default: '#3B82F6'
-  }
+  },
+  historial: [{
+    fecha: { type: Date, default: Date.now },
+    monto: Number,
+    tipo: { type: String, enum: ['deposito', 'retiro'] },
+    nota: String
+  }]
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Campo virtual para calcular progreso
-MetaAhorroSchema.virtual('progreso').get(function() {
-  return Math.min((this.montoActual / this.montoObjetivo) * 100, 100).toFixed(2);
+// Virtual para calcular el progreso
+metaAhorroSchema.virtual('progreso').get(function() {
+  if (!this.montoObjetivo || this.montoObjetivo === 0) return 0;
+  return ((this.montoActual / this.montoObjetivo) * 100).toFixed(2);
 });
-
-// Campo virtual para saber si está vencida
-MetaAhorroSchema.virtual('estaVencida').get(function() {
-  return new Date() > this.fechaLimite && this.estado === 'activa';
-});
-
-// Configurar para incluir virtuals en JSON
-MetaAhorroSchema.set('toJSON', { virtuals: true });
-MetaAhorroSchema.set('toObject', { virtuals: true });
 
 // Método para agregar fondos
-MetaAhorroSchema.methods.agregarFondos = function(monto) {
+metaAhorroSchema.methods.agregarFondos = function(monto, nota = '') {
   this.montoActual += monto;
+  this.historial.push({
+    monto,
+    tipo: 'deposito',
+    nota
+  });
   
-  // Marcar como completada si alcanza el objetivo
-  if (this.montoActual >= this.montoObjetivo) {
+  // Si alcanzó el objetivo, marcar como completada
+  if (this.montoActual >= this.montoObjetivo && this.estado === 'activa') {
     this.estado = 'completada';
   }
   
   return this.save();
 };
 
-module.exports = mongoose.model('MetaAhorro', MetaAhorroSchema);
+// Método para retirar fondos
+metaAhorroSchema.methods.retirarFondos = function(monto, nota = '') {
+  if (this.montoActual < monto) {
+    throw new Error('Fondos insuficientes en la meta');
+  }
+  
+  this.montoActual -= monto;
+  this.historial.push({
+    monto,
+    tipo: 'retiro',
+    nota
+  });
+  
+  return this.save();
+};
+
+module.exports = mongoose.model('MetaAhorro', metaAhorroSchema);

@@ -14,6 +14,8 @@ import Comparador from './paginas/Comparador';
 import Alertas from './paginas/Alertas';
 import NuevaTransaccion from './paginas/NuevaTransaccion';
 import Transacciones from './paginas/Transacciones';
+import Metas from './paginas/Metas';
+import NuevaMeta from './paginas/NuevaMeta';
 
 function App() {
   return (
@@ -32,6 +34,9 @@ function App() {
         <Route path="/alertas" element={<RutaProtegida><Alertas /></RutaProtegida>} />
         <Route path="/transacciones" element={<RutaProtegida><Transacciones /></RutaProtegida>} />
         <Route path="/transacciones/nueva" element={<RutaProtegida><NuevaTransaccion /></RutaProtegida>} />
+        <Route path="/metas" element={<RutaProtegida><Metas /></RutaProtegida>} />
+        <Route path="/metas/nueva" element={<RutaProtegida><NuevaMeta /></RutaProtegida>} />
+
         {/* Redirecciones */}
         <Route path="/" element={<Navigate to="/inicio" replace />} />
         <Route path="*" element={<Navigate to="/inicio" replace />} />
