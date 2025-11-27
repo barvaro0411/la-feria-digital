@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { enviarMensajeNubi } from '../servicios/finanzasApi';
 
 export default function ChatNubi() {
   const [mensajes, setMensajes] = useState([
@@ -21,29 +22,6 @@ export default function ChatNubi() {
     scrollToBottom();
   }, [mensajes]);
 
-  const respuestasNubi = {
-    'hola': '¡Hola! 😊 ¿Cómo puedo ayudarte con tus finanzas hoy?',
-    'gastos': 'Veo que este mes has gastado más de lo habitual. Te recomiendo revisar tu presupuesto en la sección de Finanzas 💰',
-    'ahorro': '¡Excelente pregunta! Para ahorrar más, te sugiero:\n\n1. Usa más cupones de descuento 🎟️\n2. Establece metas de ahorro claras 🎯\n3. Revisa tu presupuesto mensual 📊',
-    'presupuesto': 'Tu presupuesto actual está al 78%. Te estás acercando al límite en la categoría de Alimentación 🍔. ¿Quieres que te ayude a ajustarlo?',
-    'cupones': 'Tengo 12 cupones nuevos disponibles para ti hoy. Los mejores son:\n\n🎟️ Falabella: 20% off\n🎟️ Ripley: $10.000 descuento\n🎟️ Lider: 2x1 en productos seleccionados',
-    'metas': 'Actualmente tienes 2 metas activas:\n\n🎯 Vacaciones: 45% completado\n🎯 Notebook nuevo: 12% completado\n\n¡Sigue así! 💪',
-    'consejo': 'Aquí va mi consejo del día: 💡\n\n"Antes de comprar algo, espera 24 horas. Si aún lo quieres, probablemente lo necesites. Si no, acabas de ahorrar dinero."',
-    'ayuda': 'Puedo ayudarte con:\n\n💰 Ver tus gastos\n🎯 Revisar tus metas\n🎟️ Encontrar cupones\n📊 Analizar tu presupuesto\n💡 Darte consejos financieros\n\n¿Qué te gustaría hacer?'
-  };
-
-  const obtenerRespuesta = (mensaje) => {
-    const mensajeLower = mensaje.toLowerCase();
-    
-    for (const [palabra, respuesta] of Object.entries(respuestasNubi)) {
-      if (mensajeLower.includes(palabra)) {
-        return respuesta;
-      }
-    }
-    
-    return 'Interesante pregunta 🤔. Aún estoy aprendiendo sobre eso. ¿Puedes ser más específico o preguntar sobre gastos, ahorro, cupones o presupuesto?';
-  };
-
   const enviarMensaje = async (e) => {
     e.preventDefault();
     if (!inputMensaje.trim()) return;
@@ -56,21 +34,35 @@ export default function ChatNubi() {
     };
 
     setMensajes([...mensajes, nuevoMensajeUsuario]);
+    const mensajeEnviado = inputMensaje;
     setInputMensaje('');
     setEscribiendo(true);
 
-    setTimeout(() => {
-      const respuesta = obtenerRespuesta(inputMensaje);
+    try {
+      const res = await enviarMensajeNubi(mensajeEnviado);
+      
       const nuevoMensajeNubi = {
         id: Date.now() + 1,
         tipo: 'nubi',
-        texto: respuesta,
+        texto: res.data.respuesta,
         timestamp: new Date()
       };
 
       setMensajes(prev => [...prev, nuevoMensajeNubi]);
+    } catch (error) {
+      console.error('Error al comunicarse con Nubi:', error);
+      
+      const nuevoMensajeNubi = {
+        id: Date.now() + 1,
+        tipo: 'nubi',
+        texto: 'Lo siento, tuve un problema al procesar tu mensaje 😅 Por favor intenta de nuevo.',
+        timestamp: new Date()
+      };
+      
+      setMensajes(prev => [...prev, nuevoMensajeNubi]);
+    } finally {
       setEscribiendo(false);
-    }, 1500);
+    }
   };
 
   const sugerenciasRapidas = [
@@ -81,50 +73,70 @@ export default function ChatNubi() {
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      {/* Header */}
-      <div className="bg-panda-dark/80 backdrop-blur-sm border-b border-gray-700 p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <img src="/nubi-logo.jpg" alt="Nubi" className="h-12 w-12 rounded-full" />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header mejorado */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+          <img 
+            src="/nubi-logo.jpg" 
+            alt="Nubi" 
+            className="h-14 w-14 rounded-full object-cover shadow-lg border-2 border-white"
+          />
           <div>
-            <h1 className="text-xl font-bold text-white">Chat con Nubi</h1>
-            <p className="text-sm text-gray-400">Tu asistente financiero inteligente ☁️</p>
+            <h1 className="text-2xl font-bold text-white">Chat con Nubi</h1>
+            <p className="text-sm text-blue-100">Tu asistente financiero inteligente</p>
+          </div>
+          <div className="ml-auto">
+            <span className="inline-flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+              En línea
+            </span>
           </div>
         </div>
       </div>
 
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {mensajes.map((msg) => (
             <div
               key={msg.id}
               className={`flex ${msg.tipo === 'usuario' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`flex gap-3 max-w-[80%] ${
+                className={`flex gap-3 max-w-[75%] ${
                   msg.tipo === 'usuario' ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
+                {/* Avatar */}
                 <div className="flex-shrink-0">
                   {msg.tipo === 'nubi' ? (
-                    <img src="/nubi-logo.jpg" alt="Nubi" className="h-8 w-8 rounded-full" />
+                    <img 
+                      src="/nubi-logo.jpg" 
+                      alt="Nubi" 
+                      className="h-10 w-10 rounded-full object-cover shadow-lg border-2 border-blue-400"
+                    />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg">
                       U
                     </div>
                   )}
                 </div>
 
-                <div
-                  className={`px-4 py-3 rounded-2xl ${
-                    msg.tipo === 'usuario'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/10 text-white backdrop-blur-sm'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{msg.texto}</p>
-                  <p className="text-xs opacity-70 mt-1">
+                {/* Mensaje */}
+                <div className="flex flex-col gap-1">
+                  <div
+                    className={`px-5 py-3 rounded-2xl shadow-md ${
+                      msg.tipo === 'usuario'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                        : 'bg-white text-gray-900'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap text-base leading-relaxed">{msg.texto}</p>
+                  </div>
+                  <p className={`text-xs px-2 ${
+                    msg.tipo === 'usuario' ? 'text-right text-gray-400' : 'text-left text-gray-500'
+                  }`}>
                     {msg.timestamp.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -132,15 +144,20 @@ export default function ChatNubi() {
             </div>
           ))}
 
+          {/* Indicador de escritura */}
           {escribiendo && (
             <div className="flex justify-start">
-              <div className="flex gap-3 max-w-[80%]">
-                <img src="/nubi-logo.jpg" alt="Nubi" className="h-8 w-8 rounded-full" />
-                <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-2xl">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="flex gap-3 max-w-[75%]">
+                <img 
+                  src="/nubi-logo.jpg" 
+                  alt="Nubi" 
+                  className="h-10 w-10 rounded-full object-cover shadow-lg border-2 border-blue-400"
+                />
+                <div className="bg-white px-5 py-3 rounded-2xl shadow-md">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
@@ -153,15 +170,15 @@ export default function ChatNubi() {
 
       {/* Sugerencias rápidas */}
       {mensajes.length === 1 && (
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-3 bg-gray-900">
           <div className="max-w-4xl mx-auto">
-            <p className="text-sm text-gray-400 mb-2">Sugerencias:</p>
+            <p className="text-sm text-gray-400 mb-3 font-semibold">Sugerencias rápidas:</p>
             <div className="flex flex-wrap gap-2">
               {sugerenciasRapidas.map((sug, idx) => (
                 <button
                   key={idx}
                   onClick={() => setInputMensaje(sug.texto)}
-                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm transition"
+                  className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2.5 rounded-full text-sm transition shadow-md border border-gray-700 hover:border-blue-500"
                 >
                   {sug.emoji} {sug.texto}
                 </button>
@@ -171,23 +188,31 @@ export default function ChatNubi() {
         </div>
       )}
 
-      {/* Input */}
-      <div className="bg-panda-dark/80 backdrop-blur-sm border-t border-gray-700 p-4">
+      {/* Input mejorado */}
+      <div className="bg-gray-900 border-t border-gray-800 px-4 py-4 shadow-lg">
         <form onSubmit={enviarMensaje} className="max-w-4xl mx-auto">
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <input
               type="text"
               value={inputMensaje}
               onChange={(e) => setInputMensaje(e.target.value)}
-              placeholder="Pregúntale a Nubi sobre tus finanzas..."
-              className="flex-1 bg-white/10 backdrop-blur-sm text-white placeholder-gray-400 border border-gray-600 rounded-full px-6 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Escribe tu pregunta aquí..."
+              className="flex-1 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-full px-6 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-inner"
+              disabled={escribiendo}
             />
             <button
               type="submit"
-              disabled={!inputMensaje.trim()}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!inputMensaje.trim() || escribiendo}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3.5 rounded-full font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-purple-600"
             >
-              Enviar
+              {escribiendo ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Enviando
+                </span>
+              ) : (
+                'Enviar'
+              )}
             </button>
           </div>
         </form>

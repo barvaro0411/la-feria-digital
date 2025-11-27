@@ -8,10 +8,11 @@ const tiendasFisicasRoutes = require('./rutas/tiendasFisicasRoutes');
 const comparadorRoutes = require('./rutas/comparadorRoutes');
 const alertasRoutes = require('./rutas/alertasRoutes');
 
-// ========== NUEVAS RUTAS FINANCIERAS ==========
+// ========== RUTAS FINANCIERAS ==========
 const transaccionesRoutes = require('./rutas/transaccionesRoutes');
 const metasRoutes = require('./rutas/metasRoutes');
 const presupuestosRoutes = require('./rutas/presupuestosRoutes');
+const chatRoutes = require('./rutas/chatRoutes'); // ✅ NUEVA
 
 dotenv.config();
 
@@ -29,25 +30,28 @@ app.use('/api/tiendas-fisicas', tiendasFisicasRoutes);
 app.use('/api/comparador', comparadorRoutes);
 app.use('/api/alertas', alertasRoutes);
 
-// ========== NUEVAS RUTAS MONTADAS ==========
+// ========== RUTAS FINANCIERAS MONTADAS ==========
 app.use('/api/transacciones', transaccionesRoutes);
 app.use('/api/metas', metasRoutes);
 app.use('/api/presupuestos', presupuestosRoutes);
+app.use('/api/chat', chatRoutes); // ✅ NUEVA RUTA CHAT
 
 app.get('/', (req, res) => {
     res.json({ 
-        mensaje: 'API de La Feria Digital funcionando 👍',
+        mensaje: 'API de NubiAI funcionando 👍',
         modulos: {
             cupones: '✅',
-            finanzas: '✅ NUEVO',
-            metas: '✅ NUEVO',
-            presupuestos: '✅ NUEVO'
+            finanzas: '✅',
+            metas: '✅',
+            presupuestos: '✅',
+            chatIA: '✅ NUEVO' // ✅ AGREGADO
         }
     });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-    console.log('🚀 Módulo financiero activado');
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log('💰 Módulo financiero activado');
+    console.log('🤖 Chat IA de Nubi activado'); // ✅ NUEVO
 });

@@ -18,14 +18,18 @@ export default function Dashboard() {
       const mes = fecha.getMonth() + 1;
       const anio = fecha.getFullYear();
 
+      console.log('Cargando datos para:', mes, anio);
+
       const [statsRes, metasRes, presupuestoRes] = await Promise.all([
         obtenerEstadisticas(mes, anio),
         obtenerMetas('activa'),
         obtenerPresupuestoActual()
       ]);
 
-      setEstadisticas(statsRes.data);
-      setMetas(metasRes.data);
+      console.log('Estadísticas recibidas:', statsRes.data);
+
+      setEstadisticas(statsRes.data.data || statsRes.data);
+      setMetas(metasRes.data.data || metasRes.data || []);
       setPresupuesto(presupuestoRes.data);
     } catch (error) {
       console.error('Error cargando dashboard:', error);
@@ -45,6 +49,7 @@ export default function Dashboard() {
   const totalIngresos = estadisticas?.resumen?.find(r => r._id === 'ingreso')?.total || 0;
   const totalGastos = estadisticas?.resumen?.find(r => r._id === 'gasto')?.total || 0;
   const balance = totalIngresos - totalGastos;
+  const totalAhorro = estadisticas?.ahorroTotal || 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -72,7 +77,7 @@ export default function Dashboard() {
         />
         <TarjetaEstadistica
           titulo="Ahorro Total"
-          valor={`$${estadisticas?.ahorroTotal?.toLocaleString() || 0}`}
+          valor={`$${totalAhorro.toLocaleString()}`}
           icono="🎯"
           color="blue"
         />
@@ -139,7 +144,7 @@ export default function Dashboard() {
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${Math.min(meta.progreso, 100)}%` }}
+                    style={{ width: `${Math.min(parseFloat(meta.progreso), 100)}%` }}
                   ></div>
                 </div>
               </div>
@@ -163,7 +168,7 @@ export default function Dashboard() {
                   <div
                     className="bg-purple-500 h-2 rounded-full"
                     style={{
-                      width: `${(cat.total / totalGastos * 100).toFixed(0)}%`
+                      width: `${totalGastos > 0 ? (cat.total / totalGastos * 100).toFixed(0) : 0}%`
                     }}
                   ></div>
                 </div>
@@ -174,21 +179,29 @@ export default function Dashboard() {
       )}
 
       {/* Accesos Rápidos */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         <Link
           to="/transacciones/nueva"
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition text-center"
         >
-          <div className="text-4xl mb-2">💰</div>
+          <div className="text-4xl mb-2">➕</div>
           <div className="font-bold">Nueva Transacción</div>
         </Link>
 
         <Link
-          to="/metas/nueva"
+          to="/transacciones"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition text-center"
+        >
+          <div className="text-4xl mb-2">📋</div>
+          <div className="font-bold">Ver Transacciones</div>
+        </Link>
+
+        <Link
+          to="/metas"
           className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition text-center"
         >
           <div className="text-4xl mb-2">🎯</div>
-          <div className="font-bold">Nueva Meta</div>
+          <div className="font-bold">Mis Metas</div>
         </Link>
 
         <Link
@@ -196,7 +209,7 @@ export default function Dashboard() {
           className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition text-center"
         >
           <div className="text-4xl mb-2">📊</div>
-          <div className="font-bold">Gestionar Presupuesto</div>
+          <div className="font-bold">Mi Presupuesto</div>
         </Link>
       </div>
     </div>

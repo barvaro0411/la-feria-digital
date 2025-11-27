@@ -87,3 +87,18 @@ export const eliminarPresupuesto = async (id) => {
   const response = await axios.delete(`${API_URL}/presupuestos/${id}`, getAuthHeaders());
   return response;
 };
+
+// ========== CHAT NUBI IA ========== ✅ NUEVO
+export const enviarMensajeNubi = async (mensaje) => {
+  const response = await axios.post(
+    `${API_URL}/chat/mensaje`,
+    { mensaje },
+    getAuthHeaders()
+  );
+  return response;
+};
+
+export const obtenerAlertasNubi = async () => {
+  const response = await axios.get(`${API_URL}/chat/alertas`, getAuthHeaders());
+  return response;
+};
