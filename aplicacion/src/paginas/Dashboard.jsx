@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">💰 Dashboard Financiero</h1>
+      <h1 className="text-3xl font-bold mb-8 text-white">💰 Dashboard Financiero</h1>
 
       {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -80,20 +80,20 @@ export default function Dashboard() {
 
       {/* Presupuesto del Mes */}
       {presupuesto && presupuesto.categorias?.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-panda-card rounded-lg shadow-md p-6 mb-8 border border-gray-700">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">📊 Presupuesto del Mes</h2>
-            <Link to="/presupuesto" className="text-blue-500 hover:underline">
+            <h2 className="text-xl font-bold text-white">📊 Presupuesto del Mes</h2>
+            <Link to="/presupuesto" className="text-blue-400 hover:text-blue-300 hover:underline">
               Ver detalles
             </Link>
           </div>
 
           <div className="mb-4">
-            <div className="flex justify-between text-sm mb-2">
+            <div className="flex justify-between text-sm mb-2 text-gray-300">
               <span>Total: ${presupuesto.totalGastado?.toLocaleString()} / ${presupuesto.totalPresupuesto?.toLocaleString()}</span>
               <span>{presupuesto.porcentajeUsado}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-gray-700 rounded-full h-3">
               <div
                 className={`h-3 rounded-full ${
                   parseFloat(presupuesto.porcentajeUsado) > 90 ? 'bg-red-500' :
@@ -106,7 +106,7 @@ export default function Dashboard() {
 
           <div className="space-y-2">
             {presupuesto.categorias?.slice(0, 3).map((cat, idx) => (
-              <div key={idx} className="flex justify-between items-center text-sm">
+              <div key={idx} className="flex justify-between items-center text-sm text-gray-300">
                 <span className="font-medium">{cat.nombre}</span>
                 <span>${cat.gastado?.toLocaleString()} / ${cat.limite?.toLocaleString()}</span>
               </div>
@@ -117,26 +117,26 @@ export default function Dashboard() {
 
       {/* Metas Activas */}
       {metas.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-panda-card rounded-lg shadow-md p-6 mb-8 border border-gray-700">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">🎯 Metas de Ahorro</h2>
-            <Link to="/metas" className="text-blue-500 hover:underline">
+            <h2 className="text-xl font-bold text-white">🎯 Metas de Ahorro</h2>
+            <Link to="/metas" className="text-blue-400 hover:text-blue-300 hover:underline">
               Ver todas
             </Link>
           </div>
 
           <div className="space-y-4">
             {metas.slice(0, 3).map((meta) => (
-              <div key={meta._id} className="border-l-4 border-blue-500 pl-4">
+              <div key={meta._id} className="border-l-4 border-blue-500 pl-4 bg-gray-800 p-3 rounded">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">{meta.icono} {meta.nombre}</span>
-                  <span className="text-sm text-gray-600">{meta.progreso}%</span>
+                  <span className="font-semibold text-white">{meta.icono} {meta.nombre}</span>
+                  <span className="text-sm text-gray-400">{meta.progreso}%</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-sm text-gray-400 mb-2">
                   <span>${meta.montoActual?.toLocaleString()}</span>
                   <span>${meta.montoObjetivo?.toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full"
                     style={{ width: `${Math.min(meta.progreso, 100)}%` }}
@@ -150,16 +150,16 @@ export default function Dashboard() {
 
       {/* Gastos por Categoría */}
       {estadisticas?.porCategoria?.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4">📈 Gastos por Categoría</h2>
+        <div className="bg-panda-card rounded-lg shadow-md p-6 mb-8 border border-gray-700">
+          <h2 className="text-xl font-bold mb-4 text-white">📈 Gastos por Categoría</h2>
           <div className="space-y-3">
             {estadisticas.porCategoria.slice(0, 5).map((cat, idx) => (
               <div key={idx}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium">{cat._id}</span>
-                  <span>${cat.total?.toLocaleString()}</span>
+                  <span className="font-medium text-gray-300">{cat._id}</span>
+                  <span className="text-gray-300">${cat.total?.toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-purple-500 h-2 rounded-full"
                     style={{

@@ -2,6 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    font-family: system-ui, -apple-system, sans-serif;
+/* ========== ESTILOS GLOBALES PARA FORMULARIOS ========== */
+
+/* Asegurar que todos los inputs, selects y textareas tengan texto oscuro */
+input,
+select,
+textarea {
+  @apply text-gray-900 bg-white;
+}
+
+/* Placeholders con color gris */
+input::placeholder,
+textarea::placeholder {
+  @apply text-gray-400;
+}
+
+/* Labels con color oscuro */
+label {
+  @apply text-gray-700;
+}
+
+/* Títulos con color oscuro */
+h1, h2, h3, h4, h5, h6 {
+  @apply text-gray-900;
+}
+
+/* Párrafos con color oscuro */
+p {
+  @apply text-gray-800;
+}
+
+/* Forzar inputs de tipo date/time con texto oscuro */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="number"] {
+  @apply text-gray-900 bg-white;
+}
+
+/* Opciones de select con texto oscuro */
+option {
+  @apply text-gray-900 bg-white;
+}
+
+/* Checkboxes y radios */
+input[type="checkbox"],
+input[type="radio"] {
+  @apply cursor-pointer;
+}
+
+/* Fix para inputs en dark mode */
+input:focus,
+select:focus,
+textarea:focus {
+  @apply text-gray-900 bg-white;
 }

@@ -4,12 +4,16 @@ import Login from './componentes/Login';
 import Registro from './componentes/Registro';
 import RutaProtegida from './componentes/RutaProtegida';
 
+
+
 // Páginas
 import Inicio from './paginas/Inicio';
 import Dashboard from './paginas/Dashboard';
 import MapaDescuentos from './paginas/MapaDescuentos';
 import Comparador from './paginas/Comparador';
 import Alertas from './paginas/Alertas';
+import NuevaTransaccion from './paginas/NuevaTransaccion';
+import Transacciones from './paginas/Transacciones';
 
 function App() {
   return (
@@ -26,7 +30,8 @@ function App() {
         <Route path="/mapa" element={<RutaProtegida><MapaDescuentos /></RutaProtegida>} />
         <Route path="/comparador" element={<RutaProtegida><Comparador /></RutaProtegida>} />
         <Route path="/alertas" element={<RutaProtegida><Alertas /></RutaProtegida>} />
-        
+        <Route path="/transacciones" element={<RutaProtegida><Transacciones /></RutaProtegida>} />
+        <Route path="/transacciones/nueva" element={<RutaProtegida><NuevaTransaccion /></RutaProtegida>} />
         {/* Redirecciones */}
         <Route path="/" element={<Navigate to="/inicio" replace />} />
         <Route path="*" element={<Navigate to="/inicio" replace />} />

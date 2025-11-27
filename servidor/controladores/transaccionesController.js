@@ -9,7 +9,7 @@ exports.obtenerTransacciones = async (req, res) => {
   try {
     const { tipo, categoria, fechaInicio, fechaFin, limit = 50, page = 1 } = req.query;
     
-    const filtro = { usuario: req.usuario.id };
+    const filtro = { usuario: req.usuario._id };
     
     if (tipo) filtro.tipo = tipo;
     if (categoria) filtro.categoria = categoria;
@@ -36,6 +36,7 @@ exports.obtenerTransacciones = async (req, res) => {
       data: transacciones
     });
   } catch (error) {
+    console.error('Error obteniendo transacciones:', error);
     res.status(500).json({ success: false, mensaje: error.message });
   }
 };
@@ -47,8 +48,9 @@ exports.crearTransaccion = async (req, res) => {
   try {
     const { tipo, monto, categoria, descripcion, fecha, cuponUtilizado, montoOriginal } = req.body;
     
+    // Crear la transacción
     const transaccion = await Transaccion.create({
-      usuario: req.usuario.id,
+      usuario: req.usuario._id,
       tipo,
       monto,
       categoria,
@@ -58,20 +60,39 @@ exports.crearTransaccion = async (req, res) => {
       montoOriginal: montoOriginal || null
     });
     
-    // Actualizar estadísticas del usuario
-    const usuario = await Usuario.findById(req.usuario.id);
-    usuario.estadisticas.transaccionesRegistradas += 1;
-    
-    // Si usó cupón, actualizar ahorro total
+    // Si generó ahorro, actualizar usuario con findByIdAndUpdate (más seguro)
     if (transaccion.ahorroGenerado > 0) {
-      usuario.ahorroTotal += transaccion.ahorroGenerado;
-      usuario.estadisticas.totalAhorrado += transaccion.ahorroGenerado;
-      usuario.estadisticas.cuponesUsados += 1;
-      usuario.puntosExperiencia += Math.floor(transaccion.ahorroGenerado / 100); // 1 punto por cada $100 ahorrados
+      await Usuario.findByIdAndUpdate(
+        req.usuario._id,
+        {
+          $inc: {
+            'ahorroTotal': transaccion.ahorroGenerado,
+            'estadisticas.totalAhorrado': transaccion.ahorroGenerado,
+            'estadisticas.cuponesUsados': 1,
+            'estadisticas.transaccionesRegistradas': 1,
+            'puntosExperiencia': Math.floor(transaccion.ahorroGenerado / 100)
+          }
+        },
+        { 
+          new: true,
+          upsert: false 
+        }
+      );
+    } else {
+      // Solo incrementar contador de transacciones
+      await Usuario.findByIdAndUpdate(
+        req.usuario._id,
+        {
+          $inc: {
+            'estadisticas.transaccionesRegistradas': 1
+          }
+        },
+        { 
+          new: true,
+          upsert: false 
+        }
+      );
     }
-    
-    await usuario.save();
-    await usuario.actualizarNivel();
     
     res.status(201).json({
       success: true,
@@ -79,6 +100,7 @@ exports.crearTransaccion = async (req, res) => {
       mensaje: '💰 Transacción registrada exitosamente'
     });
   } catch (error) {
+    console.error('Error creando transacción:', error);
     res.status(400).json({ success: false, mensaje: error.message });
   }
 };
@@ -89,7 +111,7 @@ exports.crearTransaccion = async (req, res) => {
 exports.obtenerEstadisticas = async (req, res) => {
   try {
     const { mes, anio } = req.query;
-    const usuarioId = req.usuario.id;
+    const usuarioId = req.usuario._id;
     
     const filtro = { usuario: usuarioId };
     
@@ -144,6 +166,7 @@ exports.obtenerEstadisticas = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
     res.status(500).json({ success: false, mensaje: error.message });
   }
 };
@@ -160,7 +183,7 @@ exports.eliminarTransaccion = async (req, res) => {
     }
     
     // Verificar que sea del usuario
-    if (transaccion.usuario.toString() !== req.usuario.id) {
+    if (transaccion.usuario.toString() !== req.usuario._id.toString()) {
       return res.status(403).json({ success: false, mensaje: 'No autorizado' });
     }
     
@@ -168,7 +191,7 @@ exports.eliminarTransaccion = async (req, res) => {
     
     res.json({ success: true, mensaje: 'Transacción eliminada' });
   } catch (error) {
+    console.error('Error eliminando transacción:', error);
     res.status(500).json({ success: false, mensaje: error.message });
   }
 };
-    
