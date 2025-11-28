@@ -2,61 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========== ESTILOS GLOBALES PARA FORMULARIOS ========== */
+/* ✅ AGREGAR ESTO: Control global del fondo y texto */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
 
-/* Asegurar que todos los inputs, selects y textareas tengan texto oscuro */
-input,
-select,
-textarea {
-  @apply text-gray-900 bg-white;
+  /* Cuando la clase 'dark' está presente en html, aplica esto: */
+  .dark body {
+    @apply bg-nubi-dark text-white;
+  }
 }
 
-/* Placeholders con color gris */
-input::placeholder,
-textarea::placeholder {
-  @apply text-gray-400;
+/* Estilos de formularios (mantener lo que tenías, pero ajustado) */
+input, select, textarea {
+  @apply bg-white text-gray-900 border border-gray-300 rounded-md outline-none transition-all duration-200;
 }
 
-/* Labels con color oscuro */
-label {
-  @apply text-gray-700;
+/* En modo oscuro, los inputs cambian */
+.dark input, 
+.dark select, 
+.dark textarea {
+  @apply bg-gray-800 text-white border-gray-700;
 }
 
-/* Títulos con color oscuro */
-h1, h2, h3, h4, h5, h6 {
-  @apply text-gray-900;
-}
-
-/* Párrafos con color oscuro */
-p {
-  @apply text-gray-800;
-}
-
-/* Forzar inputs de tipo date/time con texto oscuro */
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="email"],
-input[type="password"],
-input[type="text"],
-input[type="number"] {
-  @apply text-gray-900 bg-white;
-}
-
-/* Opciones de select con texto oscuro */
-option {
-  @apply text-gray-900 bg-white;
-}
-
-/* Checkboxes y radios */
-input[type="checkbox"],
-input[type="radio"] {
-  @apply cursor-pointer;
-}
-
-/* Fix para inputs en dark mode */
-input:focus,
-select:focus,
-textarea:focus {
-  @apply text-gray-900 bg-white;
+.dark input::placeholder {
+  @apply text-gray-500;
 }
