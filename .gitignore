@@ -37,3 +37,9 @@ raspador/__pycache__/
 # Scraped data
 raspador/data/
 *.json.tmp
+
+node_modules/
+.env
+.DS_Store
+*.log
+.vercel

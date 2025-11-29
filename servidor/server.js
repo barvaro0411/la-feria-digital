@@ -14,7 +14,7 @@ const eventosRoutes = require('./rutas/eventosRoutes');
 const transaccionesRoutes = require('./rutas/transaccionesRoutes');
 const metasRoutes = require('./rutas/metasRoutes');
 const presupuestosRoutes = require('./rutas/presupuestosRoutes');
-const chatRoutes = require('./rutas/chatRoutes'); // ✅ NUEVA
+const chatRoutes = require('./rutas/chatRoutes');
 
 dotenv.config();
 
@@ -22,7 +22,15 @@ const app = express();
 
 conectarDB();
 
-app.use(cors());
+// CORS configurado para producción y desarrollo
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://*.vercel.app'
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Rutas existentes
@@ -31,13 +39,13 @@ app.use('/api/codigos', codigosRoutes);
 app.use('/api/tiendas-fisicas', tiendasFisicasRoutes);
 app.use('/api/comparador', comparadorRoutes);
 app.use('/api/alertas', alertasRoutes);
-app.use('/api/eventos', eventosRoutes);        // 👈 AQUÍ, después de crear app
+app.use('/api/eventos', eventosRoutes);
 
 // ========== RUTAS FINANCIERAS MONTADAS ==========
 app.use('/api/transacciones', transaccionesRoutes);
 app.use('/api/metas', metasRoutes);
 app.use('/api/presupuestos', presupuestosRoutes);
-app.use('/api/chat', chatRoutes); // ✅ NUEVA RUTA CHAT
+app.use('/api/chat', chatRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
@@ -47,14 +55,22 @@ app.get('/', (req, res) => {
       finanzas: '✅',
       metas: '✅',
       presupuestos: '✅',
-      chatIA: '✅ NUEVO'
+      chatIA: '✅'
     }
   });
 });
 
+// Puerto para Vercel
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log('💰 Módulo financiero activado');
-  console.log('🤖 Chat IA de Nubi activado');
-});
+
+// Solo usar app.listen() en desarrollo local
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log('💰 Módulo financiero activado');
+    console.log('🤖 Chat IA de Nubi activado');
+  });
+}
+
+// Exportar para Vercel
+module.exports = app;
