@@ -20,8 +20,5 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.53.3"
   }
 }
