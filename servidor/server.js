@@ -60,17 +60,15 @@ app.get('/', (req, res) => {
   });
 });
 
-// Puerto para Vercel
+// Puerto para Vercel y desarrollo local
 const PORT = process.env.PORT || 3000;
 
-// Solo usar app.listen() en desarrollo local
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-    console.log('💰 Módulo financiero activado');
-    console.log('🤖 Chat IA de Nubi activado');
-  });
-}
+// Iniciar servidor (funciona en desarrollo y producción local)
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log('💰 Módulo financiero activado');
+  console.log('🤖 Chat IA de Nubi activado');
+});
 
-// Exportar para Vercel
+// Exportar para Vercel (serverless)
 module.exports = app;
